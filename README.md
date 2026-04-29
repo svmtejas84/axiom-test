@@ -292,6 +292,20 @@ For users without AA consent, Axiom can fetch linked bank accounts via phone num
 
 ---
 
+## Additional Utilities
+
+### WiFi and Electricity Bills
+- **WiFi Bills**: Tracks payment consistency for broadband services.
+- **Electricity Bills**: Monitors timely payments to DISCOMs for household electricity usage.
+
+### Neighborhood Merchants
+- **Merchant Density Analysis**: Evaluates the density of merchants in the user's neighborhood.
+- **Merchant Trust Score**: Assigns scores based on transaction history and reliability of local merchants.
+
+These utilities enhance the scoring model by incorporating additional behavioral and geospatial data.
+
+---
+
 ## Environment Variables
 
 Create `.env` file based on `.env.example`:
