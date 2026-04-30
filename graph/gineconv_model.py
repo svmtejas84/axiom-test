@@ -102,23 +102,18 @@ class GINEConvSpatial(nn.Module):
                 nn.Linear(hidden_dim, out_dim),
             )
 
-            # Edge network to process edge attributes
-            edge_nn = nn.Sequential(
-                nn.Linear(edge_feature_dim, hidden_dim),
-                nn.ReLU(),
-                nn.Linear(hidden_dim, out_dim),
-            )
-
-            gine_layer = GINEConv(mlp, edge_nn=edge_nn)
+            # PyTorch Geometric GINEConv expects edge_dim, not a custom edge_nn
+            gine_layer = GINEConv(mlp, edge_dim=edge_feature_dim)
             self.gine_layers.append(gine_layer)
 
         # Output projection to final embedding dimension
         self.output_projection = nn.Linear(output_dim, output_dim)
 
         # Batch normalization for stable training
-        self.batch_norms = nn.ModuleList(
-            [nn.BatchNorm1d(output_dim) for _ in range(num_layers)]
-        )
+        self.batch_norms = nn.ModuleList([
+            nn.BatchNorm1d(hidden_dim if i < num_layers - 1 else output_dim) 
+            for i in range(num_layers)
+        ])
 
         self.dropout = nn.Dropout(dropout_rate)
         self.relu = nn.ReLU()

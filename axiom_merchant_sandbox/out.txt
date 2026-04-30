@@ -1,0 +1,39 @@
+============================================================
+ AXIOM MERCHANT RESOLUTION SANDBOX (STATELESS MODE)
+============================================================
+
+1. Ingesting transactions from: test_data1.csv
+✓ Parsed 1613 transactions.
+
+2. Extracting and Resolving Merchants...
+✓ Found 606 unique counterparty entities.
+✓ Successfully resolved 6 merchants to GSTIN/Physical Address via API mock.
+
+--- Resolved Merchant Directory ---
+QUERIED NAME              | GSTIN            | LEGAL NAME
+-----------------------------------------------------------------
+orien sales               | 29AAOCO8291P1ZV  | ORIEN SALES CORP
+swiggy limited            | 29AAECS4916L1ZM  | BUNDL TECHNOLOGIES PRIVATE LIMITED
+bangalore metro           | 29AAACB4881D1ZQ  | BANGALORE METRO RAIL CORPORATION LIMITED
+bangalore metro rail      | 29AAACB4881D1ZQ  | BANGALORE METRO RAIL CORPORATION LIMITED
+bangalore                 | 29AAACB4881D1ZQ  | BANGALORE METRO RAIL CORPORATION LIMITED
+swiggy                    | 29AAECS4916L1ZM  | BUNDL TECHNOLOGIES PRIVATE LIMITED
+
+3. Calculating Neighborhood Integration Index (S_N)...
+
+--- Neighborhood Trust Evaluation (Target: 12.9580, 77.5920) ---
+[WITHIN RADIUS (✓)] ORIEN SALES CORP - Dist: 0.88 km
+[OUTSIDE RADIUS (✗)] BUNDL TECHNOLOGIES PRIVATE LIMITED - Dist: 4.52 km
+[WITHIN RADIUS (✓)] BANGALORE METRO RAIL CORPORATION LIMITED - Dist: 0.14 km
+[WITHIN RADIUS (✓)] BANGALORE METRO RAIL CORPORATION LIMITED - Dist: 0.14 km
+[WITHIN RADIUS (✓)] BANGALORE METRO RAIL CORPORATION LIMITED - Dist: 0.14 km
+[OUTSIDE RADIUS (✗)] BUNDL TECHNOLOGIES PRIVATE LIMITED - Dist: 4.52 km
+============================================================
+ SUMMARY REPORT
+============================================================
+ Target Location (Lat, Lon) : 12.958, 77.592
+ Evaluation Radius          : 2.0 km
+ Total Resolved Merchants   : 6
+ Local Merchants Found      : 4
+ Neighborhood Trust (S_N)   : 60.0 / 100.0
+============================================================

@@ -25,6 +25,7 @@ The 300-900 range maps to standard credit risk buckets:
 """
 
 import logging
+import os
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any

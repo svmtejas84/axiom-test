@@ -1,0 +1,34 @@
+============================================================
+ AXIOM UNIVERSAL MERCHANT RESOLUTION SCAN
+============================================================
+
+1. Ingesting transactions from: test_data1.csv
+✓ Parsed 1613 transactions.
+
+2. Greedy Extraction of Candidate Merchants...
+✓ Total Candidates Scanned: 344
+
+3. Live API Resolution via Surepass (Zero-Footprint Enabled)...
+✓ Successfully Resolved: 3
+
+--- Volatile Resolved Merchant Directory ---
+QUERIED NAME              | GSTIN            | ADDRESS
+-----------------------------------------------------------------
+swiggy limited            | 29AAECS4916L1ZM  | Devarabeesanahalli, ...
+bangalore metro rail      | 29AAACB4881D1ZQ  | BMTC Complex, Shanth...
+orien sales               | 29AAOCO8291P1ZV  | JC Road, Kalasipalya...
+
+4. Calculating Neighborhood Integration Index (S_N) via KDTree...
+
+============================================================
+ AXIOM UNIVERSAL SCAN SUMMARY LOGGER
+============================================================
+ Target Location (Lat, Lon) : 12.958, 77.592
+ Evaluation Radius          : 2.0 km
+ Total Candidates Scanned   : 344
+ Successfully Resolved      : 3
+ Local Merchants Found      : 2
+ Neighborhood Density       : 0.16 Merchants/km²
+ Economic Cluster Score     : 0.14
+ Neighborhood Trust (S_N)   : 14.0 / 100.0
+============================================================

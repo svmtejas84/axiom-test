@@ -1,0 +1,25 @@
+============================================================
+ AXIOM FREQUENCY-BASED ENTITY RESOLUTION SCAN
+============================================================
+
+1. Ingesting transactions from: test_data1.csv
+✓ Parsed 1613 transactions.
+
+2. Frequency Extraction of All Counterparties...
+✓ Total Unique Names Scanned: 522
+✓ Found 50 Top Candidates (Freq >= 3)
+
+--- Top Frequent Names ---
+ - sushma j                      : 158 txns
+ - nagarathna b m                : 49 txns
+ - bangalore metro rail          : 46 txns
+ - shri kateel bakery            : 29 txns
+ - vinod ram                     : 29 txns
+ - venkatesh s                   : 27 txns
+ - manjulashetty                 : 24 txns
+ - a c p stores                  : 24 txns
+ - k arun                        : 16 txns
+ - akshay r                      : 16 txns
+ ... and 40 more.
+
+3. Live Free Multi-Stage Resolution...

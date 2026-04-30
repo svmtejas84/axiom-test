@@ -46,6 +46,15 @@ class ScoreRequest(BaseModel):
         }
 
 
+class ManualScoreRequest(BaseModel):
+    """Request body for POST /v1/score/manual endpoint (Hackathon bypass)."""
+
+    user_id: str = Field(..., description="Axiom internal user ID")
+    statement_data: str = Field(..., description="CSV or JSON content of bank statement")
+    format: str = Field("json", description="'json' or 'csv'")
+    include_reasons: bool = Field(False)
+
+
 class AxiomScoreResponse(BaseModel):
     """Response body for POST /v1/score endpoint."""
 

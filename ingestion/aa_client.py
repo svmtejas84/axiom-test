@@ -13,6 +13,15 @@ through FIAs (Financial Information Aggregators) like Setu. This module:
 4. Normalizes AA responses into a standard transaction format
 
 See: https://sahamati.org.in and https://www.rbi.org.in
+
+--- HACKATHON MAGIC NUMBERS ---
+The following handles can be used in Sandbox mode to trigger specific 
+financial profiles for demonstration:
+
+1. '9876543210@setu' -> PRIME (High income, consistent patterns)
+2. '8888888888@setu' -> MEDIUM (Irregular gig income, thin-file)
+3. '7777777777@setu' -> LOW (Detected circular loops/fraud)
+-------------------------------
 """
 
 import hashlib
@@ -119,6 +128,72 @@ class AccountAggregatorClient:
             )
 
         logger.info(f"Initialized AA client: {self.base_url}")
+
+    async def initiate_consent(
+        self,
+        user_vpa: str,
+        redirect_url: str = "https://axiom.credit/callback",
+    ) -> dict[str, Any]:
+        """
+        Initiate a live Account Aggregator consent request.
+
+        This is the first step in a production bank pull:
+        1. Request is signed and sent to Setu
+        2. Setu returns a 'consent_handle' and a redirect URL
+        3. User must be redirected to the URL to approve via their AA app
+        4. Once approved, 'consent_handle' can be used to fetch data
+
+        Args:
+            user_vpa: User's AA handle (e.g., "9876543210@onemoney")
+            redirect_url: URL to return user to after approval
+
+        Returns:
+            Dictionary containing:
+                {
+                    "consent_handle": str,
+                    "url": str (Redirect user here)
+                }
+
+        Note:
+            - Requires production API keys
+            - User must have an account with an RBI-licensed AA
+        """
+        path = "/fiu/consent"
+        payload = {
+            "detail": {
+                "consentStart": datetime.utcnow().isoformat() + "Z",
+                "consentExpiry": (datetime.utcnow().replace(year=datetime.utcnow().year + 1)).isoformat() + "Z",
+                "consentMode": "STORE",
+                "fetchType": "ONETIME",
+                "consentTypes": ["TRANSACTIONS", "PROFILE", "SUMMARY"],
+                "fiTypes": ["DEPOSIT"],
+                "dataConsumer": {"id": "axiom-fiu-id"},
+                "customer": {"id": user_vpa},
+                "purpose": {
+                    "code": "101",
+                    "text": "Credit scoring for Axiom Loan Application",
+                },
+                "dataLife": {"unit": "MONTH", "value": 3},
+                "dataFilter": {"unit": "MONTH", "value": 12},
+            },
+            "redirectUrl": redirect_url,
+        }
+
+        signature = self._generate_signature(
+            path=path, payload_json=json.dumps(payload)
+        )
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "X-Signature": signature,
+            "Content-Type": "application/json",
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            url = f"{self.base_url}{path}"
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            return response.json()
 
     async def fetch_consented_data(
         self,

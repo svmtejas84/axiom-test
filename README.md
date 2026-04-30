@@ -150,6 +150,14 @@ curl -X POST http://localhost:8000/v1/score \
 pytest tests/ -v --cov
 ```
 
+### 6. Universal Merchant Sandbox
+For advanced merchant resolution and stateless scoring validation:
+```bash
+cd axiom_merchant_sandbox
+python run_axiom_stateless.py
+```
+This triggers the live **Multi-Stage Resolution Engine** (DDGS/IndiaGST) and calculates the **Neighborhood Trust Loop** score ($S_N$) using zero-footprint memory processing.
+
 ---
 
 ## API Reference
