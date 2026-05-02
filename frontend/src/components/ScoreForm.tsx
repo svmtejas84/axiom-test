@@ -45,10 +45,11 @@ type ScoreFormProps = {
 };
 
 const pipelineSteps = [
-  "Collecting behavioral signals",
-  "Building trust graph",
-  "Running AI model",
-  "Preparing score insights",
+  "Ingestion",
+  "Merchant Resolution",
+  "Graph Construction",
+  "GNN Inference",
+  "Ensemble Result",
 ];
 
 const methodCards: Array<{
@@ -182,22 +183,7 @@ export function ScoreForm({
     if (!isSubmitting) {
       setPipelineStage(0);
       setProgress(12);
-      return;
     }
-
-    const timer = window.setInterval(() => {
-      setProgress((current) => {
-        if (current >= 92) {
-          return current;
-        }
-
-        const next = Math.min(current + 14, 92);
-        setPipelineStage(Math.min(Math.floor(next / 26), pipelineSteps.length - 1));
-        return next;
-      });
-    }, 700);
-
-    return () => window.clearInterval(timer);
   }, [isSubmitting]);
 
   useEffect(() => {
@@ -367,16 +353,61 @@ export function ScoreForm({
         });
       }
 
-      // 3. Call the main scoring endpoint
-      const response = await scoreUser(request);
-      setProgress(100);
-      setPipelineStage(pipelineSteps.length - 1);
-      setResult(response);
-      saveScoreHistory(buildHistoryEntry(request, selectedMethod, response));
+      // 3. Call the main scoring endpoint with streaming support
+      const response = await fetch("/api/backend/v1/score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      });
 
-      window.setTimeout(() => {
-        void router.push(redirectTo);
-      }, 500);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to start scoring pipeline");
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (!reader) throw new Error("ReadableStream not supported");
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === "stage") {
+              setPipelineStage(event.stage);
+              // Set base progress for each stage
+              setProgress(event.stage * 20 + 5);
+            } else if (event.type === "progress") {
+              // Map 0-100% of the resolution stage (Stage 1) to the 20-40% range of the overall bar
+              const base = 20;
+              const range = 20;
+              const currentProgress = base + (event.percent / 100) * range;
+              setProgress(currentProgress);
+            } else if (event.type === "result") {
+              setResult(event.data);
+              setProgress(100);
+              setPipelineStage(pipelineSteps.length - 1);
+              saveScoreHistory(buildHistoryEntry(request, selectedMethod, event.data));
+              
+              window.setTimeout(() => {
+                void router.push(redirectTo);
+              }, 1500); // Give user a moment to see the completed state
+            } else if (event.type === "error") {
+              throw new Error(event.detail);
+            }
+          } catch (e) {
+            console.error("Error parsing stream event:", e);
+          }
+        }
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Unable to fetch score. Please check your network connection and backend status.");
     }

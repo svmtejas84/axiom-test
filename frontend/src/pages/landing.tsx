@@ -97,7 +97,7 @@ export default function LandingPage() {
           eyebrow="02. LANDING INPUT"
           description="Choose `UPI ID`, `Phone No`, or `Document Upload`. Nothing is selected by default."
           redirectTo="/evaluate"
-          showPipeline={false}
+          showPipeline={true}
           showUserIdField={false}
         />
       </Box>
