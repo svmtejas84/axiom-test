@@ -1,0 +1,25 @@
+Name :- PRANIT
+Joint Holder :- -
+C/O: MOCK DATA GENERATOR
+MOCK STREET, MOCK CITY
+BENGALURU-560001
+KARNATAKA-INDIA
+Currency :- INR
+Customer ID :- 123456789
+IFSC Code :- UTIB0000065
+MICR Code :- 560211004
+Nominee Registered :- N
+
+Registered Mobile No :- XXXXXX0000
+Registered Email ID :- MOCK@GMAIL.COM
+PAN :- ABCDE1234F
+CKYC NUMBER :- XXXXXXXXXX1234
+
+Statement of Account No - 924010038358133 for the period (From : 01-04-2025  To : 29-04-2026) 
+
+Tran Date,CHQNO,PARTICULARS,DR,CR,BAL,SOL
+01-04-2025,-,CASH/ATM Withdrawal/Self/,        5000.00, ,       45000.00,065
+01-04-2025,-,UPI/P2M/148/Wine Store/Liquor/,        2000.00, ,       43000.00,065
+01-04-2025,-,UPI/P2M/149/Cash-out Agent/Unverified/,        3000.00, ,       40000.00,065
+01-04-2025,-,UPI/P2M/150/Collection Agency/Debt/,        4500.00, ,       35500.00,065
+01-04-2025,-,UPI/P2A/151/Transfer/Unknown/, ,        1000.00,       36500.00,065

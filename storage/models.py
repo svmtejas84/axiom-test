@@ -41,6 +41,7 @@ class AxiomScoreHistory(Base):
     s_b = Column(Float, nullable=True)  # Baseline component
     s_t = Column(Float, nullable=True)  # Transitive component
     r_f = Column(Float, nullable=True)  # Fraud component
+    task_id = Column(String(255), nullable=True)  # Associated Celery Task ID
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
@@ -55,3 +56,18 @@ class VerificationRecord(Base):
     months_consistent = Column(Integer, nullable=False)
     trust_coefficient = Column(Float, nullable=False)
     verified_at = Column(DateTime, default=datetime.utcnow)
+
+
+class StudentVerification(Base):
+    """Student verification record model."""
+
+    __tablename__ = "student_verifications"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String(50), nullable=False, index=True)
+    edu_email = Column(String(255), nullable=False)
+    parents_vpa_hash = Column(String(256), nullable=False)  # Hashed for privacy
+    sheerid_verification_id = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False)  # 'pending', 'verified', 'rejected'
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

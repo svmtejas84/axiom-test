@@ -1,0 +1,24 @@
+Name :- AKSHAY
+Joint Holder :- -
+C/O: MOCK DATA GENERATOR
+MOCK STREET, MOCK CITY
+BENGALURU-560001
+KARNATAKA-INDIA
+Currency :- INR
+Customer ID :- 123456789
+IFSC Code :- UTIB0000065
+MICR Code :- 560211004
+Nominee Registered :- N
+
+Registered Mobile No :- XXXXXX0000
+Registered Email ID :- MOCK@GMAIL.COM
+PAN :- ABCDE1234F
+CKYC NUMBER :- XXXXXXXXXX1234
+
+Statement of Account No - 924010038358133 for the period (From : 01-04-2025  To : 29-04-2026) 
+
+Tran Date,CHQNO,PARTICULARS,DR,CR,BAL,SOL
+01-04-2025,-,UPI/P2M/162/Unknown/Pattern/,         100.00, ,       49900.00,065
+01-04-2025,-,UPI/P2M/163/Fraudulent/Flag/,         500.00, ,       49400.00,065
+01-04-2025,-,UPI/P2M/164/Inconsistent/Payment/,          50.00, ,       49350.00,065
+01-04-2025,-,UPI/P2A/165/Transfer/Irregular/, ,        2000.00,       51350.00,065

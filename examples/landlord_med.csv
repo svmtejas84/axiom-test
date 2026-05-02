@@ -1,0 +1,25 @@
+Name :- RAMESH
+Joint Holder :- -
+C/O: MOCK DATA GENERATOR
+MOCK STREET, MOCK CITY
+BENGALURU-560001
+KARNATAKA-INDIA
+Currency :- INR
+Customer ID :- 123456789
+IFSC Code :- UTIB0000065
+MICR Code :- 560211004
+Nominee Registered :- N
+
+Registered Mobile No :- XXXXXX0000
+Registered Email ID :- MOCK@GMAIL.COM
+PAN :- ABCDE1234F
+CKYC NUMBER :- XXXXXXXXXX1234
+
+Statement of Account No - 924010038358133 for the period (From : 01-04-2025  To : 29-04-2026) 
+
+Tran Date,CHQNO,PARTICULARS,DR,CR,BAL,SOL
+01-04-2025,-,UPI/P2M/157/Hardware Store/Repairs/,        1500.00, ,       48500.00,065
+01-04-2025,-,UPI/P2M/158/Paint Shop/Maintenance/,        3000.00, ,       45500.00,065
+01-04-2025,-,UPI/P2M/159/Grocery/Personal/,        2000.00, ,       43500.00,065
+01-04-2025,-,UPI/P2A/160/Rent/Student Low/, ,        8000.00,       51500.00,065
+01-04-2025,-,UPI/P2A/161/Rent/Other Tenant/, ,        9000.00,       60500.00,065

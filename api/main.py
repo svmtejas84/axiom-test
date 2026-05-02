@@ -18,6 +18,10 @@ import redis.asyncio as redis
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from .schemas import HealthResponse
 
@@ -60,21 +64,21 @@ async def lifespan(app: FastAPI):
         # MongoDB
         mongo_url = os.getenv("MONGODB_URL")
         if mongo_url:
-            AppState.mongodb_client = motor.motor_asyncio.AsyncClient(mongo_url)
+            AppState.mongodb_client = motor.motor_asyncio.AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=2000)
             await AppState.mongodb_client.admin.command("ping")
             logger.info("Connected to MongoDB")
 
         # Redis
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-        AppState.redis_client = await redis.from_url(redis_url)
+        AppState.redis_client = await redis.from_url(redis_url, socket_timeout=2)
         await AppState.redis_client.ping()
         logger.info("Connected to Redis")
 
         logger.info("Axiom Credit API started successfully")
 
     except Exception as e:
-        logger.error(f"Error during startup: {e}")
-        raise
+        logger.error(f"Error during startup (Degraded Mode): {e}")
+        # We don't raise here so the API can still serve health/score with mocks if needed
 
     yield
 
@@ -159,8 +163,9 @@ def create_app() -> FastAPI:
         # Check PostgreSQL
         if AppState.postgres_engine:
             try:
+                import asyncio
                 async with AppState.postgres_engine.connect() as conn:
-                    await conn.execute("SELECT 1")
+                    await asyncio.wait_for(conn.execute("SELECT 1"), timeout=1.0)
             except Exception as e:
                 logger.warning(f"PostgreSQL health check failed: {e}")
                 components["postgres"] = "degraded"
@@ -170,7 +175,8 @@ def create_app() -> FastAPI:
         # Check MongoDB
         if AppState.mongodb_client:
             try:
-                await AppState.mongodb_client.admin.command("ping")
+                import asyncio
+                await asyncio.wait_for(AppState.mongodb_client.admin.command("ping"), timeout=1.0)
             except Exception as e:
                 logger.warning(f"MongoDB health check failed: {e}")
                 components["mongodb"] = "degraded"
@@ -180,7 +186,8 @@ def create_app() -> FastAPI:
         # Check Redis
         if AppState.redis_client:
             try:
-                await AppState.redis_client.ping()
+                import asyncio
+                await asyncio.wait_for(AppState.redis_client.ping(), timeout=1.0)
             except Exception as e:
                 logger.warning(f"Redis health check failed: {e}")
                 components["redis"] = "degraded"
@@ -199,10 +206,12 @@ def create_app() -> FastAPI:
         )
 
     # ===== IMPORT ROUTES =====
-    from .routes import score, verify
+    from .routes import score, verify, evaluate, student
 
     app.include_router(score.router, prefix="/v1", tags=["scoring"])
-    app.include_router(verify.router, prefix="/v1", tags=["verification"])
+    app.include_router(verify.router, prefix="/v1/verify", tags=["verification"])
+    app.include_router(evaluate.router, prefix="/evaluate", tags=["evaluation"])
+    app.include_router(student.router, prefix="/verify/student", tags=["student_verification"])
 
     logger.info("FastAPI application created successfully")
 

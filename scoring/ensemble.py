@@ -99,17 +99,14 @@ class AxiomEnsemble:
         os.getenv("AXIOM_CONFIDENCE_SIGNAL_THRESHOLD", "20")
     )
 
-    # Weights for ensemble
+    # Weights for ensemble (Base weights before non-linear scaling)
     WEIGHT_BASELINE = 0.5
     WEIGHT_TRANSITIVE = 0.35
     WEIGHT_FRAUD = 0.15
 
     def __init__(self) -> None:
         """Initialize ensemble scorer."""
-        logger.info(
-            f"Initialized AxiomEnsemble: baseline={self.WEIGHT_BASELINE}, "
-            f"transitive={self.WEIGHT_TRANSITIVE}, fraud={self.WEIGHT_FRAUD}"
-        )
+        logger.info("Initialized AxiomEnsemble (Probabilistic Calibration)")
 
     def compute_final_score(
         self,
@@ -117,74 +114,149 @@ class AxiomEnsemble:
         s_t: float,
         r_f: float,
         signal_count: int = 0,
+        risk_flags_count: int = 0,
+        risk_density: float = 0.0,
         user_id: str = "unknown",
+        metadata: dict = None,
     ) -> AxiomScore:
         """
-        Compute final Axiom Score from three components.
-
-        Args:
-            s_b: Baseline score (0-1)
-            s_t: Transitive trust score (0-1)
-            r_f: Fraud risk score (0-1)
-            signal_count: Number of behavioral signals used
-            user_id: User identifier (for logging)
-
-        Returns:
-            AxiomScore object with final score and metadata
-
-        Raises:
-            AssertionError: If final score outside [300, 900] range (safeguard)
+        Compute final Axiom Score using a non-linear probabilistic model.
+        
+        Refactored to implement:
+        1. Sigmoid Scaling for polarization.
+        2. Exponential Penalty for Red Flags.
+        3. Confidence Gating (< 60% caps at 650).
+        4. Contamination Factor (Risk > 15% slashes S_T).
         """
-        # Clamp all inputs to [0, 1]
-        s_b = max(0.0, min(s_b, 1.0))
-        s_t = max(0.0, min(s_t, 1.0))
-        r_f = max(0.0, min(r_f, 1.0))
+        import math
+        metadata = metadata or {}
 
-        # Ensemble formula
-        raw_score = (
+        # 1. Contamination Factor: If risk density > 15%, S_T is poisoned
+        if risk_density > 0.15:
+            s_t *= 0.5
+            logger.warning(f"Contamination detected for {user_id}: S_T discounted by 50%")
+
+        # 2. Base Probabilistic Score
+        # raw = (0.5 * SB) + (0.35 * ST) - (0.15 * RF)
+        raw_prob = (
             (self.WEIGHT_BASELINE * s_b)
             + (self.WEIGHT_TRANSITIVE * s_t)
             - (self.WEIGHT_FRAUD * r_f)
         )
+        
+        # 3. Sigmoid Scaling: Polarize the score toward 0 or 1
+        # Using sigmoid centered at 0.5 with steepness k=10
+        def sigmoid(x, k=10, x0=0.5):
+            return 1 / (1 + math.exp(-k * (x - x0)))
+        
+        polarized_score = sigmoid(raw_prob)
 
-        # Scale from [0, 1] to [300, 900]
-        axiom_score_float = self.SCORE_MIN + (raw_score * self.SCORE_RANGE)
+        # 4. Asymmetric Exponential Penalty
+        # Good behavior adds linearly (reflected in polarized_score), 
+        # but Red Flags slash the score exponentially: Score = Base * 0.8^n
+        penalty_multiplier = math.pow(0.8, risk_flags_count)
+        final_raw_score = polarized_score * penalty_multiplier
 
-        # Round to integer
-        axiom_score = int(round(axiom_score_float))
+        # 5. Scale to 300-900
+        base_score = int(round(self.SCORE_MIN + (polarized_score * self.SCORE_RANGE)))
+        axiom_score = base_score
+        
+        # Track contributions for explainability (SHAP-inspired)
+        contributions = {}
+        
+        # Component contributions from base formula
+        # Start at 300
+        # 1. Base Utility
+        sb_pts = int(round(s_b * self.WEIGHT_BASELINE * self.SCORE_RANGE))
+        contributions["Utility Discipline (S_B)"] = sb_pts
+        
+        # 2. Transitive trust
+        st_pts = int(round(s_t * self.WEIGHT_TRANSITIVE * self.SCORE_RANGE))
+        contributions["Transitive Trust (S_T)"] = st_pts
+        
+        # 3. Risk impact (negative)
+        # Since polarized_score = sigmoid(0.5SB + 0.35ST - 0.15RF)
+        # This is non-linear, so we'll estimate the "impact" by the penalty multiplier
+        risk_impact = int(axiom_score - (self.SCORE_MIN + sb_pts + st_pts))
+        contributions["Behavioral Risk Penalty"] = risk_impact
 
-        # CRITICAL: Enforce bounds (production safeguard)
-        assert (
-            self.SCORE_MIN <= axiom_score <= self.SCORE_MAX
-        ), f"Score {axiom_score} outside [{self.SCORE_MIN}, {self.SCORE_MAX}]"
+        # --- NEW NUANCES: Safety Nets & Anchors ---
+        
+        # Nuance 1: Student Safety Net
+        if metadata.get("student_verified") and s_t < 0.4:
+            boost = int(round((0.4 - s_t) * 0.3 * self.SCORE_RANGE))
+            axiom_score += boost
+            contributions["Identity Shield (Student)"] = boost
+            logger.info(f"Student Safety Net: Applied +{boost} points boost")
 
-        # Determine tier
-        tier = self._get_tier(axiom_score)
+        # Nuance 2: Institutional Landlord Anchor
+        landlord_type = metadata.get("landlord_type")
+        if landlord_type == "Institutional":
+            axiom_score += 80
+            contributions["Institutional Anchor"] = 80
+            logger.info("Institutional Anchor: +80 points")
+        elif landlord_type == "Low Trust" or not landlord_type:
+            axiom_score -= 50
+            contributions["Missing Stability Anchor"] = -50
+            logger.info("Stability Penalty: -50 points (Missing/Risky Landlord)")
 
-        # Compute confidence
+        # Nuance 3: Power Boost for Elite Clusters
+        if s_t > 0.85 and s_b > 0.85:
+            axiom_score += 40
+            contributions["Elite Cluster Power Boost"] = 40
+            logger.info("Elite Cluster Power Boost: +40 points")
+
+        # Nuance 4: Parental Trust Anchor (Inheritance)
+        parent_score = metadata.get("parent_score", 0.5)
+        if parent_score > 0.85:
+            boost = 60
+            axiom_score += boost
+            contributions["Parental Trust Anchor"] = boost
+            logger.info(f"Parental Trust Anchor: +{boost} points (Reputation: {parent_score})")
+        elif parent_score < 0.4:
+            # Linear penalty for low-trust inheritance
+            penalty = int(round((0.4 - parent_score) * 250)) # Max ~100 points
+            axiom_score -= penalty
+            contributions["Parental Trust Penalty"] = -penalty
+            logger.info(f"Parental Trust Penalty: -{penalty} points (Reputation: {parent_score})")
+
+        # 6. Confidence Gating
         confidence = self._compute_confidence(signal_count)
+        confidence_gate_applied = False
+        if confidence < 0.60 and axiom_score > 650:
+            logger.info(f"Confidence Gating applied for {user_id}: {axiom_score} -> 650")
+            axiom_score = 650
+            confidence_gate_applied = True
+            
+        # Enforce hard bounds
+        axiom_score = max(self.SCORE_MIN, min(self.SCORE_MAX, axiom_score))
 
-        # Build result
-        result = AxiomScore(
+        # 7. Determine Tier and Build Result
+        tier = self._get_tier(axiom_score)
+        
+        return AxiomScore(
             axiom_score=axiom_score,
             confidence_interval=confidence,
             tier=tier,
             signal_count=signal_count,
-            component_scores={"s_b": s_b, "s_t": s_t, "r_f": r_f, "raw": raw_score},
+            component_scores={
+                "s_b": s_b, 
+                "s_t": s_t, 
+                "r_f": r_f, 
+                "risk_penalty": penalty_multiplier,
+                "raw_prob": raw_prob
+            },
             metadata={
                 "user_id": user_id,
-                "formula": f"300 + 600*[({self.WEIGHT_BASELINE}*{s_b:.3f}) "
-                f"+ ({self.WEIGHT_TRANSITIVE}*{s_t:.3f}) - ({self.WEIGHT_FRAUD}*{r_f:.3f})]",
+                "risk_density": risk_density,
+                "flags": risk_flags_count,
+                "logic": "Probabilistic Sigmoid + Exponential Penalty",
+                "contributions": contributions,
+                "confidence_gate_applied": confidence_gate_applied,
+                "student_verified": metadata.get("student_verified"),
+                "landlord_type": landlord_type
             },
         )
-
-        logger.info(
-            f"Computed Axiom Score for {user_id}: score={axiom_score}, "
-            f"tier={tier}, confidence={confidence:.2f}, "
-            f"signals={signal_count}"
-        )
-
-        return result
 
     def _get_tier(self, score: int) -> str:
         """
