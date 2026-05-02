@@ -1,0 +1,25 @@
+Name :- KISHORE
+Joint Holder :- -
+C/O: MOCK DATA GENERATOR
+MOCK STREET, MOCK CITY
+BENGALURU-560001
+KARNATAKA-INDIA
+Currency :- INR
+Customer ID :- 123456789
+IFSC Code :- UTIB0000065
+MICR Code :- 560211004
+Nominee Registered :- N
+
+Registered Mobile No :- XXXXXX0000
+Registered Email ID :- MOCK@GMAIL.COM
+PAN :- ABCDE1234F
+CKYC NUMBER :- XXXXXXXXXX1234
+
+Statement of Account No - 924010038358133 for the period (From : 01-04-2025  To : 29-04-2026) 
+
+Tran Date,CHQNO,PARTICULARS,DR,CR,BAL,SOL
+01-04-2025,-,UPI/P2M/143/Supermarket/Groceries/,        2500.00, ,       47500.00,065
+01-04-2025,-,UPI/P2M/144/Electric Bill/BESCOM/,        1200.00, ,       46300.00,065
+01-04-2025,-,UPI/P2M/145/Petrol Bunk/Fuel/,        3000.00, ,       43300.00,065
+01-04-2025,-,UPI/P2M/146/Mobile Recharge/Airtel/,         500.00, ,       42800.00,065
+01-04-2025,-,IMPS/P2A/147/Salary/SME/, ,       60000.00,      102800.00,065

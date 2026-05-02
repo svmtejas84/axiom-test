@@ -50,18 +50,43 @@ def main():
     import subprocess
     
     file_path_to_score = None
+    payload = {}
 
     if input_method == "1":
         upi = Prompt.ask("Enter UPI ID", default="tejas@upi")
         payload["upi_id"] = upi
-        # Look for mock data
-        mock_path = f"examples/{upi.split('@')[0]}.csv"
-        if os.path.exists(mock_path):
-            file_path_to_score = mock_path
-            console.print(f"[dim]Found mock data for UPI: {mock_path}[/dim]")
+        
+        # Resolve mock path via REPUTATION_NODES
+        from examples.reputation_nodes import REPUTATION_NODES
+        # Resolve matching key from REPUTATION_NODES
+        resolved_key = None
+        for key, node in REPUTATION_NODES.items():
+            if node.get("vpa") == upi:
+                resolved_key = key
+                break
+
+        # Map specific keys to requested neighborhood CSVs
+        if resolved_key == "student_high":
+            mock_path = "examples/high_trust_neighborhood.csv"
+        elif resolved_key == "student_med":
+            mock_path = "examples/medium_trust_neighborhood.csv"
+        elif resolved_key == "student_low":
+            mock_path = "examples/low_trust_neighborhood.csv"
+        elif resolved_key and (resolved_key.startswith("parent") or resolved_key.startswith("landlord")):
+            mock_path = None # Do not parse CSVs for these
         else:
-            file_path_to_score = "examples/test_data1.csv"
-            console.print(f"[dim]No specific mock data found. Falling back to default: {file_path_to_score}[/dim]")
+            mock_path = f"examples/{upi.split('@')[0]}.csv"
+        
+        if mock_path and os.path.exists(mock_path):
+            file_path_to_score = mock_path
+            msg = f"Found mock data for {resolved_key}" if resolved_key else "Found mock data for UPI"
+            console.print(f"[dim]{msg}: {mock_path}[/dim]")
+        else:
+            file_path_to_score = "test_data1.csv"
+            if resolved_key and (resolved_key.startswith("parent") or resolved_key.startswith("landlord")):
+                 console.print(f"[dim]Using reputation score for {resolved_key}. Falling back to default statement for behavioral analysis.[/dim]")
+            else:
+                 console.print(f"[dim]No specific mock data found. Falling back to default: {file_path_to_score}[/dim]")
 
     elif input_method == "2":
         phone = Prompt.ask("Enter Phone Number", default="9876543210")
@@ -71,11 +96,11 @@ def main():
             file_path_to_score = mock_path
             console.print(f"[dim]Found mock data for Phone: {mock_path}[/dim]")
         else:
-            file_path_to_score = "examples/test_data1.csv"
+            file_path_to_score = "test_data1.csv"
             console.print(f"[dim]No specific mock data found. Falling back to default: {file_path_to_score}[/dim]")
 
     else:
-        file_path_to_score = Prompt.ask("Enter absolute or relative path to CSV statement", default="examples/test_data1.csv")
+        file_path_to_score = Prompt.ask("Enter absolute or relative path to CSV statement", default="test_data1.csv")
         if not os.path.exists(file_path_to_score):
             console.print(f"[bold red]Error: File {file_path_to_score} does not exist.[/bold red]")
             sys.exit(1)

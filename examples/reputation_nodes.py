@@ -3,6 +3,7 @@ REPUTATION_NODES = {
     "student_high": {
         "node_id": "u_student_high",
         "reputation_score": 0.95,
+        "vpa": "tejas26@okaxis",
         "email_domain": "ac.in",
         "typical_merchants": ["Medicals", "Stationery", "Library Fees", "University Cafeteria"],
         "risk_flags": 0,
@@ -11,6 +12,7 @@ REPUTATION_NODES = {
     "student_med": {
         "node_id": "u_student_med",
         "reputation_score": 0.65,
+        "vpa": "reema22@sbi",
         "email_domain": "ac.in",
         "typical_merchants": ["SLV Refreshments", "Amma Bakery", "Uber India", "Swiggy"],
         "risk_flags": 1,
@@ -19,6 +21,7 @@ REPUTATION_NODES = {
     "student_low": {
         "node_id": "u_student_low",
         "reputation_score": 0.25,
+        "vpa": "john21@upi",
         "email_domain": "gmail.com",
         "typical_merchants": ["Betting App", "Wine Store", "Local Bar", "Game Top-up"],
         "risk_flags": 8,

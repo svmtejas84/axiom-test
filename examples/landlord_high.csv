@@ -1,0 +1,25 @@
+Name :- RIYA
+Joint Holder :- -
+C/O: MOCK DATA GENERATOR
+MOCK STREET, MOCK CITY
+BENGALURU-560001
+KARNATAKA-INDIA
+Currency :- INR
+Customer ID :- 123456789
+IFSC Code :- UTIB0000065
+MICR Code :- 560211004
+Nominee Registered :- N
+
+Registered Mobile No :- XXXXXX0000
+Registered Email ID :- MOCK@GMAIL.COM
+PAN :- ABCDE1234F
+CKYC NUMBER :- XXXXXXXXXX1234
+
+Statement of Account No - 924010038358133 for the period (From : 01-04-2025  To : 29-04-2026) 
+
+Tran Date,CHQNO,PARTICULARS,DR,CR,BAL,SOL
+01-04-2025,-,UPI/P2M/152/Maintenance Services/Building/,        5000.00, ,       45000.00,065
+01-04-2025,-,UPI/P2M/153/Property Tax/BBMP/,        8000.00, ,       37000.00,065
+01-04-2025,-,UPI/P2M/154/Water Board/BWSSB/,        1200.00, ,       35800.00,065
+01-04-2025,-,UPI/P2A/155/Rent/Student High/, ,       15000.00,       50800.00,065
+01-04-2025,-,UPI/P2A/156/Rent/Student Med/, ,       12000.00,       62800.00,065

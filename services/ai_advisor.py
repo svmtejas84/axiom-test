@@ -73,6 +73,11 @@ class AICreditAdvisor:
         if risk_pts < 0:
              advice_blocks.append(f"- **Mitigate Risk Signals**: Your profile has a {risk_pts} pt drag from high-risk merchant categories. Transitioning spend to GST-verified pharmacies or supermarkets will offset this.")
 
+        # Parental Trust Inheritance (Nuance 4)
+        parent_pts = contributions.get("Parental Trust Penalty", 0)
+        if parent_pts < 0:
+            advice_blocks.append(f"- **Trust Inheritance Drag**: Your link to a low-reputation Parent VPA is penalizing you by {abs(parent_pts)} points. To recover this, link a high-trust Landlord VPA or verify your student status with an official institution email.")
+
         # 3. System Constraints
         if report.system_constraints:
             for constraint in report.system_constraints:

@@ -206,6 +206,20 @@ class AxiomEnsemble:
             contributions["Elite Cluster Power Boost"] = 40
             logger.info("Elite Cluster Power Boost: +40 points")
 
+        # Nuance 4: Parental Trust Anchor (Inheritance)
+        parent_score = metadata.get("parent_score", 0.5)
+        if parent_score > 0.85:
+            boost = 60
+            axiom_score += boost
+            contributions["Parental Trust Anchor"] = boost
+            logger.info(f"Parental Trust Anchor: +{boost} points (Reputation: {parent_score})")
+        elif parent_score < 0.4:
+            # Linear penalty for low-trust inheritance
+            penalty = int(round((0.4 - parent_score) * 250)) # Max ~100 points
+            axiom_score -= penalty
+            contributions["Parental Trust Penalty"] = -penalty
+            logger.info(f"Parental Trust Penalty: -{penalty} points (Reputation: {parent_score})")
+
         # 6. Confidence Gating
         confidence = self._compute_confidence(signal_count)
         confidence_gate_applied = False

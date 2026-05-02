@@ -50,6 +50,8 @@ class ExplainabilityService:
                     report.factors_improving.append(f"Identity Shield: verification mitigated family risk (+{pts} pts)")
                 elif "Anchor" in feat:
                     report.factors_improving.append(f"Institutional Anchor: verified landlord agreement (+{pts} pts)")
+                elif "Parental" in feat:
+                    report.factors_improving.append(f"Trust Inheritance: linked to reputable node (+{pts} pts)")
                 else:
                     report.factors_improving.append(f"{feat} (+{pts} pts)")
             elif pts < 0:
@@ -57,6 +59,8 @@ class ExplainabilityService:
                     report.factors_reducing.append(f"Behavioral Risk: high-risk merchant profile detected ({pts} pts)")
                 elif "Missing" in feat:
                     report.factors_reducing.append(f"Stability Gap: missing residency validation ({pts} pts)")
+                elif "Parental" in feat:
+                    report.factors_reducing.append(f"Trust Inheritance: linked to low-reputation node ({pts} pts)")
                 else:
                     report.factors_reducing.append(f"{feat} ({pts} pts)")
         
