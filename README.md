@@ -1,266 +1,68 @@
-# Axiom Credit Scoring Platform
+# Axiom Equilibrium Engine 🛡️
+> **Production-Grade Non-Linear Credit Scoring for the Next Billion Users**
 
-A production-grade Python monorepo implementing the **Axiom credit scoring platform** for thin-file users in India. Axiom combines Account Aggregator (AA) data, graph neural networks, and behavioral analysis to generate trustworthy credit scores in the 300-900 range for users with minimal historical credit records.
-
-## Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    AXIOM CREDIT PLATFORM                        │
-└─────────────────────────────────────────────────────────────────┘
-
-                           ┌──────────────┐
-                           │   FastAPI    │
-                           │   REST API   │
-                           └──────┬───────┘
-                                  │
-                ┌─────────────────┼─────────────────┐
-                │                 │                 │
-        ┌───────▼─────────┐  ┌────▼─────┐  ┌──────▼──────┐
-        │  /v1/score      │  │/v1/verify │  │ /health     │
-        │ (Main scoring)  │  │(Bilateral)│  │             │
-        └────────┬────────┘  └────┬──────┘  └─────────────┘
-                 │                │
-    ┌────────────┴────────────────┴──────────┐
-    │         INGESTION PIPELINE             │
-    ├────────────────────────────────────────┤
-    │ • Account Aggregator (Setu/Sahamati)   │
-    │ • UPI Transaction Parser               │
-    │ • Utility Bill Tracker (DISCOM, WiFi)  │
-    │ • Rent Verification Engine             │
-    │ • Phone Number → Bank Account Mapper   │
-    └────────────────────────────────────────┘
-                      │
-    ┌─────────────────▼──────────────────┐
-    │      GRAPH CONSTRUCTION            │
-    ├────────────────────────────────────┤
-    │ • TrustGraph (NetworkX DiGraph)     │
-    │ • KDTree Node Enrichment            │
-    │ • Feature Vector Assembly           │
-    └────────────────────────────────────┘
-                      │
-    ┌─────────────────▼──────────────────┐
-    │     NEURAL SCORING ENGINE          │
-    ├────────────────────────────────────┤
-    │ • GINEConv Spatial Layers (3x)      │
-    │ • GRU Temporal Layers               │
-    │ • ST-PIGNN Fusion + Constraints     │
-    └────────────────────────────────────┘
-                      │
-    ┌─────────────────▼──────────────────────────────┐
-    │        SCORING ENSEMBLE (300-900)              │
-    ├────────────────────────────────────────────────┤
-    │ Score = 300 + 600 * [(0.5*S_B)                 │
-    │                      + (0.35*S_T)              │
-    │                      - (0.15*R_F)]             │
-    │                                                │
-    │ S_B: Baseline (XGBoost)                        │
-    │ S_T: Transitive Trust (PageRank + Landlord)    │
-    │ R_F: Fraud Risk (Loop Detection + Sybil)       │
-    └────────────────────────────────────────────────┘
-                      │
-    ┌─────────────────▼──────────────────┐
-    │      SHAP EXPLAINABILITY           │
-    ├────────────────────────────────────┤
-    │ • Top 3 Positive Drivers           │
-    │ • Top 3 Negative Drivers           │
-    │ • Reason Codes for Regulators      │
-    └────────────────────────────────────┘
-                      │
-    ┌─────────────────▼──────────────────┐
-    │       PERSISTENCE & CACHING        │
-    ├────────────────────────────────────┤
-    │ • PostgreSQL: Score History        │
-    │ • MongoDB: Raw Behavioral Events   │
-    │ • Redis: Real-time Score Cache     │
-    └────────────────────────────────────┘
-```
-
-## Quick Start
-
-### Prerequisites
-- Docker & Docker Compose
-- Python 3.11+
-- Setu AA API credentials (sandbox)
-
-### 1. Clone & Setup Environment
-
-```bash
-cd axiom-credit
-cp .env.example .env
-# Edit .env with your Setu AA credentials and RBI sandbox URLs
-```
-
-### 2. Start Services
-
-```bash
-docker-compose up --build
-```
-
-This starts:
-- **API**: FastAPI on `http://localhost:8000`
-- **PostgreSQL**: Database on `localhost:5432`
-- **MongoDB**: NoSQL store on `localhost:27017`
-- **Redis**: Cache on `localhost:6379`
-
-### 3. Health Check
-
-```bash
-curl http://localhost:8000/health
-```
-
-### 4. Score a User
-
-**Method A: Consent Handle (from AA flow)**
-```bash
-curl -X POST http://localhost:8000/v1/score \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user123",
-    "consent_handle": "ch_1234567890",
-    "include_reasons": true
-  }'
-```
-
-**Method B: Enter UPI ID directly (mock consent)**
-```bash
-curl -X POST http://localhost:8000/v1/score \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user123",
-    "upi_id": "user@bankupi",
-    "include_reasons": true
-  }'
-```
-
-**Method C: Phone number → Bank Account lookup**
-```bash
-curl -X POST http://localhost:8000/v1/score \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user123",
-    "phone_number": "+919876543210",
-    "include_reasons": true
-  }'
-```
-
-### 5. Run Tests
-
-```bash
-pytest tests/ -v --cov
-```
-
-### 6. Universal Merchant Sandbox
-For advanced merchant resolution and stateless scoring validation:
-```bash
-cd axiom_merchant_sandbox
-python run_axiom_stateless.py
-```
-This triggers the live **Multi-Stage Resolution Engine** (DDGS/IndiaGST) and calculates the **Neighborhood Trust Loop** score ($S_N$) using zero-footprint memory processing.
+Axiom is a high-fidelity credit scoring platform designed for thin-file users. It leverages **Account Aggregator (AA)** data, **Spatio-Temporal Graph Neural Networks (GNNs)**, and **SHAP-inspired Interpretability** to transform raw transaction streams into risk-aware credit profiles.
 
 ---
 
-## API Reference
+## Architecture: The Equilibrium Engine
 
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/health` | GET | None | Service health & dependencies status |
-| `/v1/score` | POST | JWT (stub) | Compute Axiom Score from AA data or UPI/phone |
-| `/v1/verify` | POST | JWT (stub) | Bilateral landlord verification via signed agreement |
+Axiom has evolved from a linear additive model into a **non-linear, risk-aware probabilistic engine**. The architecture is designed for **Ephemeral Stateless Execution**, ensuring zero-footprint memory isolation after each scoring run.
 
-### POST /v1/score
-
-**Request:**
-```json
-{
-  "user_id": "uuid",
-  "consent_handle": "ch_...",  // OR
-  "upi_id": "user@bankupi",    // OR
-  "phone_number": "+919876543210",
-  "include_reasons": true
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "axiom_score": 650,
-  "confidence_interval": 0.87,
-  "tier": "High",
-  "behavioral_drivers": [
-    {
-      "driver": "High Neighborhood Merchant Density",
-      "impact_points": 42,
-      "direction": "positive"
-    },
-    {
-      "driver": "Inconsistent Utility Payment",
-      "impact_points": -18,
-      "direction": "negative"
-    }
-  ],
-  "verification_status": "Bilateral Verified",
-  "signal_count": 34,
-  "generated_at": "2024-04-29T10:30:00Z"
-}
-```
-
-### POST /v1/verify
-
-**Request:**
-```json
-{
-  "user_id": "uuid",
-  "landlord_vpa": "landlord@bankupi",
-  "agreement_hash": "sha256_hash_of_signed_agreement"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "is_verified": true,
-  "months_consistent": 8,
-  "trust_coefficient": 0.92,
-  "verification_timestamp": "2024-04-29T10:30:00Z"
-}
-```
+### Core Components:
+1.  **Ingestion & Entropy**: Shannon Entropy analysis of transaction diversity and time-decayed risk signal extraction.
+2.  **Neighborhood Graph (KDTree)**: Projection of transactions into UTM space for geospatial trust density validation.
+3.  **GNN Reputation Propagation**: An ST-PIGNN (Spatio-Temporal Physics-Informed GNN) that propagates trust from **Reference Nodes** (Verified Students, Parents, Landlords) to the user.
+4.  **Probabilistic Ensemble**: A non-linear fusion layer that uses Sigmoid scaling to polarize scores, creating clear variance between Prime and Subprime tiers.
 
 ---
 
-## Credit Scoring Formula
+## The Stateless Workflow (End-to-End)
 
-### Final Axiom Score: 300-900 Range
+The pipeline executes a 7-stage ephemeral workflow:
 
-```
-AxiomScore = 300 + 600 * RawScore
+1.  **Ingestion**: Statement ingestion via `StatementIngestor`.
+2.  **Risk Analysis**: Identification of "Red Flag" keywords with **Temporal Decay** (recent risks carry higher penalties).
+3.  **Merchant Resolution**: Multi-stage resolution via web search and GSTIN validation.
+4.  **Entropy & Diversity**: Calculation of merchant diversity scores (Shannon Entropy).
+5.  **Spatial Enrichment**: KDTree-based neighborhood density calculation.
+6.  **Graph Injection**: Propagation of reputation scores from linked Parent/Landlord VPAs into the GNN.
+7.  **Ensemble Scoring**: Final calculation of the Axiom Score (300-900) with SHAP explainability.
 
-where RawScore = (0.5 × S_B) + (0.35 × S_T) - (0.15 × R_F)
+---
 
-  S_B (Baseline, 50%):
-    - XGBoost model trained on tabular features
-    - Features: income volatility, expense ratio, utility discipline, rent consistency
-    - Output: [0, 1]
+## Scoring Logic: Non-Linear Probabilistic Model
 
-  S_T (Transitive Trust, 35%):
-    - Landlord's Axiom score × rent_verification_trust_coefficient
-    - Plus PageRank centrality from transaction graph
-    - Output: [0, 1]
+The **Equilibrium Engine** eliminates "clumping" by using a polar scoring system.
 
-  R_F (Fraud Risk, -15%):
-    - Loop detection: flags circular transaction patterns (Sybil risk)
-    - Herd check: flags landlords with >N tenants in same pincode
-    - Output: [0, 1]
-```
+### 1. The Base Formula
+The score is derived from three primary signals:
+$$Score = 300 + 600 \times \sigma(0.5 S_B + 0.35 S_T - 0.15 R_F)$$
 
-### Score Tiers
+*   **$S_B$ (Behavioral Discipline)**: Utility payment consistency and neighborhood integration.
+*   **$S_T$ (Transitive Trust)**: Reputation inherited from the graph (Parent/Landlord links).
+*   **$R_F$ (Red Flags)**: Negative behavioral signals (Betting, Cash-out, etc.).
+*   **$\sigma$ (Sigmoid)**: Polarizes scores to create a spread from 350 to 850.
+
+### 2. Specialized Nuances
+*   **Student Safety Net**: Dampens negative $S_T$ impact by **0.3x** if the user is a verified student, protecting them from risky parental links.
+*   **Institutional Landlord Anchor**: Adds **+80 points** for verified institutional landlords; applies a **-50 point** penalty if missing or low-trust.
+*   **Proxy Anchor**: If no fixed income (Salary) is detected, the score is capped at **720** to prevent over-extension.
+*   **Confidence Gating**: Scores are capped at **650** if the signal density is below 60%.
+
+### 3. Interpretability (SHAP + AI Advisor)
+Every score is accompanied by a **SHAP Waterfall Report** showing exactly how many points each signal added or subtracted. This data is fed into a **Gemini-powered AI Advisor** to provide targeted financial advice (e.g., "Shift spend to GST-verified pharmacies to boost your neighborhood score").
+
+---
+
+## Score Tiers
 
 | Tier | Range | Interpretation |
 |------|-------|-----------------|
-| Low | 300-450 | High risk; limited lending eligibility |
-| Medium | 450-600 | Moderate risk; eligible with guarant |
-| High | 600-800 | Low risk; standard lending terms |
-| Prime | 800-900 | Excellent risk; premium rates available |
+| **Subprime** | 300-500 | High risk; building phase |
+| **Standard** | 500-650 | Moderate risk; gated by data density |
+| **High** | 650-800 | Low risk; Prime eligible with Anchors |
+| **Prime** | 800-900 | Elite trust; verified by Salary + Institutional Anchors |
 
 ---
 

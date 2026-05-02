@@ -121,7 +121,7 @@ class STPIGNN(nn.Module):
 
     def __init__(
         self,
-        node_feature_dim: int = 8,
+        node_feature_dim: int = 10,
         edge_feature_dim: int = 2,
         hidden_dim: int = 128,
         spatial_output_dim: int = 64,

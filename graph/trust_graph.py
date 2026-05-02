@@ -54,6 +54,8 @@ class NodeFeatures:
     transaction_count: int = 0
     average_transaction_value: float = 0.0
     axiom_score: float | None = None  # For landlord nodes
+    education_verified: float = 0.0  # 0 or 1
+    parent_trust_link: float = 0.0  # 0 to 1 based on parent's score
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_vector(self) -> list[float]:
@@ -61,7 +63,7 @@ class NodeFeatures:
         Convert to feature vector for GNN input.
 
         Returns:
-            List of 8 numerical features in consistent order
+            List of 10 numerical features in consistent order
         """
         return [
             self.income_volatility_index,
@@ -72,6 +74,8 @@ class NodeFeatures:
             self.axiom_score if self.axiom_score else 0.0,
             1.0 if self.node_type == "user" else 0.0,
             1.0 if self.node_type == "landlord" else 0.0,
+            self.education_verified,
+            self.parent_trust_link,
         ]
 
 

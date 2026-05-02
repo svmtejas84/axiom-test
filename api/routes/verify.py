@@ -9,8 +9,8 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
-from ..api.schemas import VerifyRequest, VerifyResponse
-from ..ingestion.rent_verifier import RentVerifier
+from ..schemas import VerifyRequest, VerifyResponse, OCRRequest, OCRResponse
+from ingestion.rent_verifier import RentVerifier
 
 logger = logging.getLogger(__name__)
 
@@ -56,3 +56,20 @@ async def verify_rent(request: VerifyRequest, req: Request) -> VerifyResponse:
     except Exception as e:
         logger.error(f"[{request_id}] Error verifying rent: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/ocr", response_model=OCRResponse)
+async def process_rent_agreement(request: OCRRequest, req: Request) -> OCRResponse:
+    """
+    Process an uploaded rent agreement using OCR to extract landlord VPA and other details.
+    """
+    from services.ocr_service import OCRService
+    ocr_service = OCRService()
+    
+    result = await ocr_service.process_document(request.model_dump())
+    
+    return OCRResponse(
+        status=result["status"],
+        document_type=result["extracted_data"]["document_type"],
+        extracted_data=result["extracted_data"],
+        confidence_score=result["extracted_data"]["confidence_score"]
+    )

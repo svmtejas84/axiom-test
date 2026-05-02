@@ -118,6 +118,31 @@ services:
       timeout: 5s
       retries: 5
 
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # Celery Worker - Async ML Inference
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: axiom-worker
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql://axiom:axiom_password@postgres:5432/axiom
+      - MONGODB_URL=mongodb://mongodb:27017
+      - REDIS_URL=redis://redis:6379/0
+      - TORCH_DEVICE=cpu
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: celery -A api.celery_app.celery_app worker --loglevel=info
+    networks:
+      - axiom-network
+
 volumes:
   postgres_data:
     driver: local

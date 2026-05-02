@@ -148,3 +148,97 @@ class ErrorResponse(BaseModel):
                 "request_id": "req_abc123def456",
             }
         }
+
+
+class EvaluationRequest(BaseModel):
+    """Request body for POST /evaluate endpoint (Async Task)."""
+    user_id: str = Field(..., description="Axiom internal user ID")
+    upi_id: str | None = Field(None, description="Direct UPI entry")
+    phone_number: str | None = Field(None, description="Phone number for bank account lookup")
+    file_metadata: dict[str, Any] | None = Field(None, description="Metadata for uploaded statements")
+
+
+class EvaluationResponse(BaseModel):
+    """Response containing the Celery task ID."""
+    task_id: str = Field(..., description="Celery Task ID to poll for results")
+    status: str = Field("processing", description="Initial status")
+
+
+class TaskStatusResponse(BaseModel):
+    """Response for GET /status/{task_id} endpoint."""
+    task_id: str
+    status: str = Field(..., description="PENDING, PROCESSING, SUCCESS, FAILURE")
+    result: dict[str, Any] | None = None
+    meta: dict[str, Any] | None = None
+    error: str | None = None
+
+
+class GraphNode(BaseModel):
+    id: str
+    group: int
+    label: str
+    trust_score: float | None = None
+
+
+class GraphEdge(BaseModel):
+    source: str
+    target: str
+    value: float
+
+
+class GraphOutput(BaseModel):
+    """JSON-serializable representation of TrustGraph for frontend."""
+    nodes: list[GraphNode]
+    links: list[GraphEdge]
+
+
+class RecommendationResponse(BaseModel):
+    """GPT-4 generated insights."""
+    factors_reducing_score: list[str]
+    high_impact_flags: list[str]
+    recommendations: list[str]
+
+
+class TransactionAnalytics(BaseModel):
+    """Summary of transaction patterns for the UI."""
+    top_categories: list[dict[str, Any]] = Field(..., description="Most frequent transaction categories")
+    monthly_volume_trend: list[float] = Field(..., description="Last 6 months volume trend")
+    avg_transaction_value: float
+
+class ScoreOutput(AxiomScoreResponse):
+    """Extended Score Response including Graph and Recommendations."""
+    graph: GraphOutput | None = None
+    insights: RecommendationResponse | None = None
+    transaction_analytics: TransactionAnalytics | None = None
+
+
+class OCRRequest(BaseModel):
+    """Request to process a document via OCR."""
+    filename: str
+    content_type: str
+    file_size: int
+
+class OCRResponse(BaseModel):
+    """OCR extraction results."""
+    status: str
+    document_type: str
+    extracted_data: dict[str, Any]
+    confidence_score: float
+
+class StudentVerifyRequest(BaseModel):
+    """Request body for POST /verify/student endpoint."""
+    user_id: str = Field(..., description="Axiom internal user ID")
+    first_name: str = Field(..., description="First name of the student")
+    last_name: str = Field(..., description="Last name of the student")
+    birth_date: str = Field(..., description="Date of birth (YYYY-MM-DD)")
+    edu_email: str = Field(..., description="Student's .edu email address")
+    organization_id: int = Field(..., description="SheerID Organization ID")
+    organization_name: str = Field(..., description="SheerID Organization Name")
+    parents_vpa: str = Field(..., description="Parent's UPI VPA for trust inheritance")
+
+class StudentVerifyResponse(BaseModel):
+    """Response body for POST /verify/student endpoint."""
+    verification_id: str = Field(..., description="SheerID Verification ID")
+    status: str = Field(..., description="'pending_email_loop', 'verified', 'rejected'")
+    trust_boost_applied: bool = Field(False, description="True if parent's trust was inherited")
+

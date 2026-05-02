@@ -85,15 +85,15 @@ class StatementIngestor:
                     row.get("Tran Date")
                 )
                 
-                # 2. Handle Amount & Type (Standard or Axis Bank DR/CR columns)
-                debit = (row.get("DR") or "").strip().replace(",", "")
-                credit = (row.get("CR") or "").strip().replace(",", "")
+                # 2. Handle Amount & Type (Standard, Axis Bank, or Generated)
+                debit = (row.get("DR") or row.get("Withdrawal Amt") or "").strip().replace(",", "")
+                credit = (row.get("CR") or row.get("Deposit Amt") or "").strip().replace(",", "")
                 amount_str = row.get("amount") or row.get("Amount") or row.get("Value")
                 
-                if debit and debit != "":
+                if debit and debit != "" and float(debit) != 0:
                     amount = float(debit)
                     txn_type = "DEBIT"
-                elif credit and credit != "":
+                elif credit and credit != "" and float(credit) != 0:
                     amount = float(credit)
                     txn_type = "CREDIT"
                 elif amount_str:
@@ -107,16 +107,26 @@ class StatementIngestor:
                     row.get("counterparty") or 
                     row.get("Payee") or 
                     row.get("PARTICULARS") or
+                    row.get("Narration") or
                     row.get("Description") or 
                     "Unknown"
                 )
                 
                 # 4. Parse Timestamp
-                try:
-                    # Try Axis Bank format first
-                    dt = datetime.strptime(date_str, "%d-%m-%Y")
-                except:
-                    dt = datetime.fromisoformat(date_str) if date_str else datetime.utcnow()
+                dt = None
+                date_formats = ["%d-%m-%Y", "%d-%b-%Y %H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]
+                for fmt in date_formats:
+                    try:
+                        dt = datetime.strptime(date_str, fmt)
+                        break
+                    except:
+                        continue
+                
+                if not dt:
+                    try:
+                        dt = datetime.fromisoformat(date_str)
+                    except:
+                        dt = datetime.utcnow()
 
                 normalized.append(
                     NormalizedTransaction(
