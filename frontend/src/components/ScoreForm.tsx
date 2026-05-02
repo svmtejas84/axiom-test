@@ -19,7 +19,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import { scoreUser, ScoreRequest, ScoreResponse, verifyStudent } from "@/lib/api";
+import { scoreUser, ScoreRequest, ScoreResponse, verifyStudent, verifyRent } from "@/lib/api";
 import { saveScoreHistory, ScoreHistoryEntry, ScoreInputMethod } from "@/lib/storage";
 import { InteractiveCard } from "@/components/InteractiveCard";
 import { useThemeMode } from "@/components/theme-mode";
@@ -133,7 +133,8 @@ export function ScoreForm({
   const router = useRouter();
   const { palette, mode } = useThemeMode();
   const [selectedMethod, setSelectedMethod] = useState<ScoreInputMethod | null>(null);
-  const [selectedVerification, setSelectedVerification] = useState<string | null>(null);
+  const [showStudentVerification, setShowStudentVerification] = useState(false);
+  const [showRentVerification, setShowRentVerification] = useState(false);
   const [rentVerificationMethod, setRentVerificationMethod] = useState<"landlord_vpa" | "documents" | null>(null);
   const [showDocuments, setShowDocuments] = useState(false);
   const [documents, setDocuments] = useState<File[]>([]);
@@ -214,7 +215,8 @@ export function ScoreForm({
 
   function chooseMethod(method: ScoreInputMethod | "documents") {
     setMethodError(null);
-    setSelectedVerification(null);
+    setShowStudentVerification(false);
+    setShowRentVerification(false);
     setRentVerificationMethod(null);
     if (method === "documents") {
       setSelectedMethod(null);
@@ -226,9 +228,13 @@ export function ScoreForm({
   }
 
   function chooseVerification(verification: string) {
-    setSelectedVerification((current) => (current === verification ? null : verification));
-    if (verification !== "rent_verification") {
-      setRentVerificationMethod(null);
+    if (verification === "student_verification") {
+      setShowStudentVerification((prev) => !prev);
+    } else if (verification === "rent_verification") {
+      setShowRentVerification((prev) => {
+        if (prev) setRentVerificationMethod(null);
+        return !prev;
+      });
     }
   }
 
@@ -328,10 +334,12 @@ export function ScoreForm({
 
     const request = formatRequest(values, selectedMethod);
     request.user_id = userId;
+    request.student_verified = showStudentVerification;
+    request.rent_verified = showRentVerification;
 
     try {
       // 1. If student verification is active, call the verification endpoint first
-      if (selectedVerification === "student_verification") {
+      if (showStudentVerification) {
         await verifyStudent({
           user_id: userId,
           first_name: "Mock", 
@@ -345,7 +353,7 @@ export function ScoreForm({
       }
 
       // 2. If rent verification is active, call the rent verification endpoint
-      if (selectedVerification === "rent_verification" && rentVerificationMethod === "landlord_vpa") {
+      if (showRentVerification && rentVerificationMethod === "landlord_vpa") {
         await verifyRent({
           user_id: userId,
           landlord_vpa: values.landlord_vpa || "",
@@ -395,7 +403,19 @@ export function ScoreForm({
               setResult(event.data);
               setProgress(100);
               setPipelineStage(pipelineSteps.length - 1);
-              saveScoreHistory(buildHistoryEntry(request, selectedMethod, event.data));
+              
+              const historyEntry = buildHistoryEntry(request, selectedMethod, event.data);
+              if (showStudentVerification && showRentVerification) {
+                historyEntry.verification_status = "Student & Rent";
+              } else if (showStudentVerification) {
+                historyEntry.verification_status = "Student Only";
+              } else if (showRentVerification) {
+                historyEntry.verification_status = "Rent Only";
+              } else {
+                historyEntry.verification_status = "Unverified";
+              }
+              
+              saveScoreHistory(historyEntry);
               
               window.setTimeout(() => {
                 void router.push(redirectTo);
@@ -574,7 +594,9 @@ export function ScoreForm({
               </Text>
               <Grid templateColumns={["1fr", null, "repeat(2, 1fr)"]} gap={4}>
                 {verificationCards.map((verification) => {
-                  const active = verification.id === selectedVerification;
+                  const active =
+                    (verification.id === "student_verification" && showStudentVerification) ||
+                    (verification.id === "rent_verification" && showRentVerification);
 
                   return (
                     <VStack key={verification.id} align="stretch" spacing={3}>
@@ -618,7 +640,7 @@ export function ScoreForm({
                         </VStack>
                       </Button>
 
-                      {verification.id === "student_verification" && selectedVerification === "student_verification" && (
+                      {verification.id === "student_verification" && showStudentVerification && (
                         <VStack align="stretch" spacing={3}>
                           <FormControl>
                             <Input
@@ -660,7 +682,7 @@ export function ScoreForm({
                         </VStack>
                       )}
 
-                      {verification.id === "rent_verification" && selectedVerification === "rent_verification" && (
+                      {verification.id === "rent_verification" && showRentVerification && (
                         <VStack align="stretch" spacing={3}>
                           <Grid templateColumns={["1fr", "1fr 1fr"]} gap={3}>
                             <Button

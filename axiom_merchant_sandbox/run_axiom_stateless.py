@@ -22,6 +22,7 @@ from graph.kdtree_enricher import KDTreeEnricher, Location
 from ingestion.utility_tracker import UtilityTracker, UtilityBill
 from graph.st_pignn import STPIGNN
 from scoring.ensemble import AxiomEnsemble
+from scoring.baseline_score import BaselineScorer, BaselineFeatures
 
 # Try to import reputation nodes for graph injection
 try:
@@ -379,12 +380,19 @@ async def main(file_path: str = None, student_verified: bool = False, rent_verif
     print(f"    Transitive Trust Score (S_T): {s_t:.2f}")
 
     print("\n[+] 7. Executing Probabilistic ensemble.py...")
-    ensemble = AxiomEnsemble()
     
-    # Calculate trust-boosted baseline
-    s_b_base = 0.75
-    trust_bonus = (density * 0.1) + (p2p_nodes_count * 0.02)
-    s_b_final = min(0.98, s_b_base + trust_bonus)
+    # 4. Scoring Logic using BaselineScorer
+    baseline_scorer = BaselineScorer()
+    s_b = baseline_scorer.score(BaselineFeatures(
+        income_volatility_index=0.3,
+        expense_to_income_ratio=0.7,
+        utility_payment_delta_avg=max(0.1, 10.0 * (1.0 - utility_score.overall_score)),
+        rent_consistency_months=12 if rent_verified else 0,
+        merchant_density_score=density / 5.0,
+        informal_credit_proxy_count=p2p_nodes_count,
+    ))
+    
+    ensemble = AxiomEnsemble()
     
     # Proxy Anchor Logic
     proxy_cap = None
@@ -395,9 +403,9 @@ async def main(file_path: str = None, student_verified: bool = False, rent_verif
             
     # Calculate Final Probabilistic Score
     axiom_result = ensemble.compute_final_score(
-        s_b=s_b_final, 
+        s_b=s_b, 
         s_t=s_t, 
-        r_f=0.05, 
+        r_f=risk_ratio, 
         signal_count=len(resolved_profiles),
         risk_flags_count=int(time_decayed_penalty_points),
         risk_density=risk_ratio,
@@ -410,11 +418,6 @@ async def main(file_path: str = None, student_verified: bool = False, rent_verif
         }
     )
 
-    if student_verified:
-        axiom_result.axiom_score += 50
-    if rent_verified:
-        axiom_result.axiom_score += 30
-        
     # Apply Proxy Anchor Cap if necessary
     if proxy_cap and axiom_result.axiom_score > proxy_cap:
         print(f"    Proxy Anchor: No fixed income proof. Capping score at {proxy_cap}")

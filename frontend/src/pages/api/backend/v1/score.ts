@@ -27,8 +27,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const scriptPath = "axiom_merchant_sandbox/run_axiom_stateless.py";
   const args = [scriptPath, finalPath];
-  if (req.body.student_verified || upi_id) args.push("--student-verified");
-  if (req.body.rent_verified || landlord_vpa) args.push("--rent-verified");
+  if (req.body.student_verified) args.push("--student-verified");
+  if (req.body.rent_verified) args.push("--rent-verified");
   if (parent_vpa) args.push("--parent-vpa", parent_vpa);
   if (landlord_vpa) args.push("--landlord-vpa", landlord_vpa);
 
