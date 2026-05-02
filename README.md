@@ -185,7 +185,26 @@ Persistence to PostgreSQL & MongoDB:
 
 ## Development
 
-### Code Quality
+### Using NPM Scripts (Recommended)
+
+For easier execution, the following `npm` commands are available:
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development API server (with reload) |
+| `npm start` | Start production API server |
+| `npm test` | Run tests |
+| `npm run lint` | Lint code with Ruff and Mypy |
+| `npm run format` | Format code with Black and Isort |
+| `npm run score` | Run the interactive scoring pipeline (handles backend startup automatically) |
+| `npm run score:csv` | Run scoring on a CSV file |
+| `npm run migrate` | Apply database migrations |
+| `npm run docker:up` | Start services using Docker Compose |
+| `npm run clean` | Clean up temporary files and caches |
+
+### Manual Execution
+
+If you prefer running commands directly:
 
 ```bash
 # Format code
@@ -194,12 +213,10 @@ isort .
 
 # Lint
 ruff check .
-
-# Type check
 mypy .
 
-# Run tests with coverage
-pytest tests/ -v --cov --cov-report=html
+# Run tests
+pytest tests/ -v
 ```
 
 ### Adding New Scoring Features

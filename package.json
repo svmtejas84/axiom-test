@@ -1,0 +1,33 @@
+{
+  "name": "axiom-credit",
+  "version": "1.0.0",
+  "description": "Production-grade credit scoring platform for thin-file users in India",
+  "main": "api/main.py",
+  "scripts": {
+    "start": "uvicorn api.main:app --host 0.0.0.0 --port 8000",
+    "dev": "uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload",
+    "test": "pytest tests/ -v",
+    "test:cov": "pytest tests/ -v --cov=. --cov-report=html",
+    "lint": "ruff check . && mypy .",
+    "lint:fix": "ruff check . --fix",
+    "format": "black . && isort .",
+    "score": "./run_axiom.sh",
+    "score:raw": "python main_execution.py",
+    "score:csv": "python score_csv.py",
+    "migrate": "alembic upgrade head",
+    "migrate:create": "alembic revision --autogenerate -m",
+    "docker:build": "docker build -t axiom-credit:latest .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "clean": "find . -type d -name '__pycache__' -exec rm -rf {} + && rm -rf .pytest_cache .coverage htmlcov"
+  },
+  "keywords": [
+    "credit-scoring",
+    "fintech",
+    "fastapi",
+    "python",
+    "gnn"
+  ],
+  "author": "Axiom Engineering Team",
+  "license": "MIT"
+}

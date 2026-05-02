@@ -29,7 +29,7 @@ REPUTATION_NODES = {
     "parent_high": {
         "node_id": "p_parent_high",
         "reputation_score": 0.98,
-        "vpa": "parent_prime@axis",
+        "vpa": "rahulpatil13-1@axis",
         "typical_merchants": ["Property Tax", "Life Insurance", "Wealth Management", "School Fees"],
         "avg_daily_balance": "High",
         "type": "Parent"
@@ -37,7 +37,7 @@ REPUTATION_NODES = {
     "parent_med": {
         "node_id": "p_parent_med",
         "reputation_score": 0.70,
-        "vpa": "parent_standard@sbi",
+        "vpa": "kishore52@sbi",
         "typical_merchants": ["Supermarket", "Electric Bill", "Petrol Bunk", "Mobile Recharge"],
         "avg_daily_balance": "Medium",
         "type": "Parent"
@@ -45,7 +45,7 @@ REPUTATION_NODES = {
     "parent_low": {
         "node_id": "p_parent_low",
         "reputation_score": 0.30,
-        "vpa": "parent_risky@upi",
+        "vpa": "pranit@upi",
         "typical_merchants": ["ATM Withdrawal", "Wine Store", "Cash-out Agent", "Collection Agency"],
         "avg_daily_balance": "Low",
         "type": "Parent"
@@ -56,7 +56,7 @@ REPUTATION_NODES = {
         "node_id": "l_landlord_high",
         "reputation_score": 0.99,
         "type": "Institutional",
-        "vpa": "prop_mgmt_corp@hdfc",
+        "vpa": "riya93@hdfc",
         "pattern": "Monthly fixed receipts (50+ count)",
         "gst_status": "Registered",
         "typical_merchants": ["Maintenance Services", "Property Tax", "Water Board"]
@@ -65,7 +65,7 @@ REPUTATION_NODES = {
         "node_id": "l_landlord_med",
         "reputation_score": 0.75,
         "type": "Private",
-        "vpa": "house_owner@icici",
+        "vpa": "ramesh67@icici",
         "pattern": "2-3 monthly rent receipts",
         "gst_status": "Unregistered",
         "typical_merchants": ["Hardware Store", "Paint Shop", "Grocery"]
@@ -74,7 +74,7 @@ REPUTATION_NODES = {
         "node_id": "l_landlord_low",
         "reputation_score": 0.40,
         "type": "Unverified",
-        "vpa": "risky_owner@okaxis",
+        "vpa": "akshay82@okaxis",
         "pattern": "Inconsistent pattern",
         "gst_status": "Unregistered",
         "fraud_flags": 3
